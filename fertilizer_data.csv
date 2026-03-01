@@ -1,0 +1,10 @@
+Crop,N_needed,P_needed,K_needed,Fertilizer
+Rice,80,40,40,Urea
+Wheat,60,30,30,DAP
+Maize,100,60,40,NPK 14-35-14
+Cotton,120,60,40,Urea
+Apple,20,125,200,MOP
+Grapes,20,125,200,MOP
+Coffee,100,20,30,Urea
+Moth Beans,30,40,30,DAP
+Chickpea,40,50,40,DAP
