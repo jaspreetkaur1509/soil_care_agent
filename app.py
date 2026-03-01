@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import sys
 import subprocess
 import joblib
 import matplotlib.pyplot as plt
@@ -65,6 +66,7 @@ def load_models():
         forecast_models = joblib.load('forecast_models.pkl')
         return crop_model, cnn_model, forecast_models
     except Exception as e:
+        print(f"Failed to load models: {e}")
         return None, None, None
 
 # -----------------------------------------------------------------------------
@@ -190,9 +192,9 @@ def main():
         st.warning("⚠️ Models not found! Generating data and training models now... this may take a moment.")
         try:
             with st.spinner("Running generate_data.py..."):
-                subprocess.run(["python", "generate_data.py"], check=True)
+                subprocess.run([sys.executable, "generate_data.py"], check=True)
             with st.spinner("Running train_models.py..."):
-                subprocess.run(["python", "train_models.py"], check=True)
+                subprocess.run([sys.executable, "train_models.py"], check=True)
             st.success("✅ Models generated successfully! Reloading...")
             st.rerun()
         except subprocess.CalledProcessError as e:
