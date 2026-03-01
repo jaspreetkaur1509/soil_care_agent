@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import subprocess
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -186,9 +187,17 @@ def main():
     
     # Check if models are loaded
     if crop_model is None or cnn_model is None or forecast_models is None:
-        st.error("❌ Models not found! Please run the following commands first:")
-        st.code("python generate_data.py\npython train_models.py")
-        st.stop()
+        st.warning("⚠️ Models not found! Generating data and training models now... this may take a moment.")
+        try:
+            with st.spinner("Running generate_data.py..."):
+                subprocess.run(["python", "generate_data.py"], check=True)
+            with st.spinner("Running train_models.py..."):
+                subprocess.run(["python", "train_models.py"], check=True)
+            st.success("✅ Models generated successfully! Reloading...")
+            st.rerun()
+        except subprocess.CalledProcessError as e:
+            st.error(f"❌ Failed to run training scripts. Error: {e}")
+            st.stop()
     
     # 2. Sidebar Utils
     st.sidebar.image("https://cdn-icons-png.flaticon.com/512/628/628283.png", width=100)
