@@ -196,6 +196,7 @@ def main():
             with st.spinner("Running train_models.py..."):
                 subprocess.run([sys.executable, "train_models.py"], check=True)
             st.success("✅ Models generated successfully! Reloading...")
+            st.cache_resource.clear()
             st.rerun()
         except subprocess.CalledProcessError as e:
             st.error(f"❌ Failed to run training scripts. Error: {e}")
