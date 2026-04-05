@@ -64,10 +64,12 @@ def load_models():
         crop_model = joblib.load('crop_model.pkl')
         cnn_model = load_model('soil_cnn.h5')
         forecast_models = joblib.load('forecast_models.pkl')
-        return crop_model, cnn_model, forecast_models
+        fertilizer_model = joblib.load('fertilizer_model.pkl')
+        fertilizer_encoders = joblib.load('fertilizer_encoders.pkl')
+        return crop_model, cnn_model, forecast_models, fertilizer_model, fertilizer_encoders
     except Exception as e:
         print(f"Failed to load models: {e}")
-        return None, None, None
+        return None, None, None, None, None
 
 # -----------------------------------------------------------------------------
 # HELPER FUNCTIONS (INFERENCE ONLY)
@@ -185,14 +187,14 @@ def get_gemini_response(question, api_key, image=None):
 # MAIN APP
 # -----------------------------------------------------------------------------
 def main():
-    crop_model, cnn_model, forecast_models = load_models()
+    crop_model, cnn_model, forecast_models, fertilizer_model, fertilizer_encoders = load_models()
     
     # Check if models are loaded
-    if crop_model is None or cnn_model is None or forecast_models is None:
+    if crop_model is None or cnn_model is None or forecast_models is None or fertilizer_model is None:
         st.warning("⚠️ Models not found! Generating data and training models now... this may take a moment.")
         try:
-            with st.spinner("Running generate_data.py..."):
-                subprocess.run([sys.executable, "generate_data.py"], check=True)
+            with st.spinner("Running generate_data.py (skipped to preserve custom data)..."):
+                pass # subprocess.run([sys.executable, "generate_data.py"], check=True)
             with st.spinner("Running train_models.py..."):
                 subprocess.run([sys.executable, "train_models.py"], check=True)
             st.success("✅ Models generated successfully! Reloading...")
@@ -264,25 +266,41 @@ def main():
             p = st.number_input("Phosphorus (P)", 0, 150, 50)
             k = st.number_input("Potassium (K)", 0, 200, 50)
             temp = st.number_input("Temperature (°C)", 0.0, 50.0, 25.0)
+            moisture = st.number_input("Moisture (%)", 0.0, 100.0, 40.0)
         with col2:
             hum = st.number_input("Humidity (%)", 0.0, 100.0, 70.0)
             ph = st.number_input("pH Level", 0.0, 14.0, 7.0)
             rain = st.number_input("Rainfall (mm)", 0.0, 500.0, 100.0)
+            soil_type = st.selectbox("Soil Type", fertilizer_encoders['soil_encoder'].classes_)
         
-        if st.button("Recommend Crop"):
+        if st.button("Recommend Crop & Fertilizer"):
             prediction = predict_crop(crop_model, n, p, k, temp, hum, ph, rain)
-            st.success(f"Recommended Crop: **{prediction}**")
+            st.success(f"Recommended Crop: **{prediction.capitalize()}**")
             
-            # Simple fertilizer logic based on input vs 'ideal' (dummy)
+            # Dynamic fertilizer logic using trained model
             st.subheader("💊 Fertilizer Suggestion")
-            if n < 50:
-                st.write("• **Urea**: Apply 50-100 kg/ha to boost Nitrogen.")
-            if p < 30:
-                st.write("• **DAP**: Apply DAP for phosphorus deficiency.")
-            if k < 30:
-                st.write("• **MOP**: Potash fertilizer recommended.")
-            if n >= 50 and p >= 30 and k >= 30:
-                st.write("• Soil nutrient levels seem adequate. Maintain organic compost.")
+            try:
+                enc_soil = fertilizer_encoders['soil_encoder'].transform([soil_type])[0]
+                
+                # Check if predicted crop exists in the encoder, else fallback
+                valid_crops = fertilizer_encoders['crop_encoder'].classes_
+                crop_to_encode = prediction.capitalize()
+                
+                # Some manual mapping for variations if needed, or fallback
+                if crop_to_encode.lower() == 'mothbeans':
+                    crop_to_encode = 'Moth Beans'
+                if crop_to_encode not in valid_crops:
+                    crop_to_encode = valid_crops[0] # Fallback to first available internally if strictly not found
+                    
+                enc_crop = fertilizer_encoders['crop_encoder'].transform([crop_to_encode])[0]
+                
+                # Predict fertilizer order: Temparature, Humidity, Moisture, Soil Type, Crop Type, Nitrogen, Potassium, Phosphorous
+                fert_input = [[temp, hum, moisture, enc_soil, enc_crop, n, k, p]]
+                fert_prediction = fertilizer_model.predict(fert_input)[0]
+                
+                st.write(f"• Based on the inputs and the crop, the recommended fertilizer is **{fert_prediction}**.")
+            except Exception as e:
+                st.error(f"Error predicting fertilizer: {e}")
 
     elif page == "Soil Fertility Check":
         st.header("🧪 Advanced Soil Fertility Analysis")
@@ -349,7 +367,7 @@ def main():
         ax.plot(f_years, n_f, 'x--', label='Nitrogen (Pred)')
         ax.plot(years, p_h, 'o-', label='Phosphorus (Hist)')
         ax.plot(f_years, p_f, 'x--', label='Phosphorus (Pred)')
-        ax.set_title("Soil Nutrient Trends (2020-2027)")
+        ax.set_title("Soil Nutrient Trends (2020-2026)")
         ax.set_xlabel("Year")
         ax.set_ylabel("Level (kg/ha)")
         ax.legend()

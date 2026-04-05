@@ -6,6 +6,7 @@ import tensorflow as tf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras import layers, models
 
 def train_crop_model():
@@ -75,6 +76,33 @@ def train_forecast_models():
     joblib.dump(forecast_models, 'forecast_models.pkl')
     print("✓ Forecast models saved to forecast_models.pkl")
 
+def train_fertilizer_model():
+    print("Training Fertilizer Recommendation Model...")
+    df = pd.read_csv('fertilizer_data.csv')
+    
+    # Strip whitespace from column names just in case
+    df.columns = df.columns.str.strip()
+    
+    # Encode categorical features
+    soil_encoder = LabelEncoder()
+    crop_encoder = LabelEncoder()
+    
+    df['Soil Type'] = soil_encoder.fit_transform(df['Soil Type'])
+    df['Crop Type'] = crop_encoder.fit_transform(df['Crop Type'])
+    
+    # Inputs: Temparature, Humidity, Moisture, Soil Type, Crop Type, Nitrogen, Potassium, Phosphorous
+    X = df[['Temparature', 'Humidity', 'Moisture', 'Soil Type', 'Crop Type', 'Nitrogen', 'Potassium', 'Phosphorous']]
+    y = df['Fertilizer Name']
+    
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X, y)
+    
+    # Save the model and encoders
+    joblib.dump(model, 'fertilizer_model.pkl')
+    encoders = {'soil_encoder': soil_encoder, 'crop_encoder': crop_encoder}
+    joblib.dump(encoders, 'fertilizer_encoders.pkl')
+    print("✓ Fertilizer model and encoders saved.")
+
 if __name__ == "__main__":
     if not os.path.exists('crop_data.csv'):
         print("❌ Error: crop_data.csv not found. Run generate_data.py first.")
@@ -82,4 +110,5 @@ if __name__ == "__main__":
         train_crop_model()
         train_soil_cnn()
         train_forecast_models()
+        train_fertilizer_model()
         print("\nAll models trained and saved.")

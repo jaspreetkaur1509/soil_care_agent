@@ -1,0 +1,105 @@
+=========================================================
+SOIL CARE AGENT - STEP-BY-STEP SETUP AND EXECUTION GUIDE
+=========================================================
+
+This document provides a thorough, step-by-step process for preparing, 
+installing, and running the Soil Care Agent project from scratch.
+
+---------------------------------------------------------
+STEP 1: PREREQUISITES & SOFTWARE REQUIREMENTS
+---------------------------------------------------------
+Before running anything, ensure your system has the following:
+
+1. Python: 
+   - You must have Python installed. Versions between 3.8 and 3.11 are 
+     highly recommended for compatibility with TensorFlow.
+   - You can download it from https://www.python.org/. During installation,
+     ensure you check the box that says "Add Python to PATH".
+
+2. A code editor (like VS Code, Sublime Text, or Notepad) to view/edit files.
+3. A web browser (Google Chrome, Edge, Safari, Firefox) to view the app UI.
+4. A Terminal / Command Prompt to run the commands below.
+
+---------------------------------------------------------
+STEP 2: OPENING YOUR TERMINAL & PROJECT DIRECTORY
+---------------------------------------------------------
+1. Open your Terminal (Command Prompt, PowerShell, or Git Bash).
+2. Change your directory to the project folder where this project is located:
+   
+   Command:
+   cd d:\Projects\Soil_bot
+
+   (Note: Adjust the path if you move the folder elsewhere).
+
+---------------------------------------------------------
+STEP 3: Mannually validate if everything is in place
+---------------------------------------------------------
+1. Check if you have all the files in the project folder:
+   - app.py
+   - generate_data.py
+   - train_models.py
+   - requirements.txt
+   - .env
+   - soil_cnn.h5
+   - crop_model.pkl
+   - forecast_models.pkl
+---------------------------------------------------------
+STEP 4: INSTALLING DEPENDENCIES (PIP COMMANDS)
+---------------------------------------------------------
+The project has multiple libraries required to run flawlessly. We can 
+install all of them at once using the requirements.txt file.
+
+1. Run the following pip command:
+   Command: pip install -r requirements.txt
+
+What this installs:
+- streamlit: Runs the website user interface.
+- pandas / numpy: Used for datasets and data manipulation.
+- scikit-learn: Contains Machine Learning models (Random Forest, Linear Regression).
+- tensorflow: Used for the Deep Learning Computer Vision (CNN) model.
+- google-generativeai: The library to communicate with the Google Gemini AI Assistant.
+- Pillow: Processes uploaded images.
+- python-dotenv: Securely reads your API keys.
+
+---------------------------------------------------------
+STEP 5: CONFIGURING THE API KEY (.env FILE)
+---------------------------------------------------------
+The AI Chatbot relies on Google Gemini AI. You must provide it with an API key.
+
+1. In the project folder, locate the file named `.env`.
+   (If it does not exist, create a new text file and name it exactly `.env`)
+2. Open it in a text editor and add the following line, replacing the placeholder
+   with your actual API key:
+
+   GOOGLE_API_KEY=your_actual_key_goes_here
+
+* You can acquire a free key at https://aistudio.google.com/ *
+
+---------------------------------------------------------
+STEP 6: RUNNING THE APPLICATION FLOW
+---------------------------------------------------------
+To ensure everything works properly, run the project in these exact 3 steps.
+
+STEP 6A: Generate Data 
+----------------------
+This will create synthetic datasets (crop_data.csv, fertilizer_data.csv, soil_data.csv) 
+that mimic real agricultural data.
+
+   Command: python generate_data.py
+
+STEP 6B: Train Models
+---------------------
+This will take the generated CSV data and train the AI models. It saves the 
+learned patterns in heavy files (.pkl and .h5) so that the app starts up faster.
+
+   Command: python train_models.py
+
+STEP 6C: Launch the Streamlit App
+---------------------------------
+Finally, launch the actual graphical user interface servers. 
+
+   Command: streamlit run app.py
+
+Once you run this command, your terminal will provide a 'Local URL' (usually 
+http://localhost:8501). Your default web browser will automatically open this 
+link and you can start interacting with the Soil Care Agent!
