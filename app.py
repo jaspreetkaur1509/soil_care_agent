@@ -357,7 +357,7 @@ def main():
 
     elif page == "Nutrient Forecasting":
         st.header("📈 Nutrient Levels Forecast")
-        st.write("Predicting future trend based on training data model.")
+        st.write("Predicting future trend based on training data model")
         
         years, n_h, p_h, k_h, f_years, n_f, p_f, k_f = forecast_nutrients(forecast_models)
         
